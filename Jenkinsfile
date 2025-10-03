@@ -32,7 +32,7 @@ pipeline {
 
     post {
         always {
-            junit '**/test-results/*.xml' // collect test results if using pytest junit plugin
+            junit '**/test-results.xml' // collect test results if using pytest junit plugin
         }
         failure {
             echo "Tests failed!"
