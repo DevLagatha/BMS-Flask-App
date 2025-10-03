@@ -1,1 +1,4 @@
-def test_example():\n    assert 2 + 2 == 4
+# tests/test_app.py
+
+def test_example():
+    assert 2 + 2 == 4
