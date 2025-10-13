@@ -14,7 +14,7 @@ pipeline {
             }
         }
 
-        stage('Set up Environment') {
+        stage('Set up Environment') {  
             steps {
                 echo "Creating virtual environment..."
                 sh '''
@@ -34,7 +34,7 @@ pipeline {
                     if [ -f requirements.txt ]; then
                         pip install -r requirements.txt
                     else
-                        echo "⚠️ No requirements.txt found"
+                        echo "No requirements.txt found"
                     fi
                     pip install pytest
                 '''
@@ -47,8 +47,8 @@ pipeline {
                 sh '''
                     set +e
                     . ${VENV}/bin/activate
-                    pytest -v || echo "⚠️ Some tests failed or not found, continuing..."
-                    exit 0
+                    pytest -v || echo "Some tests failed or not found, continuing..."
+                    exit 0"
                 '''
             }
         }
@@ -68,7 +68,7 @@ pipeline {
                 echo "🔹 Simulating deployment..."
                 sh '''
                     . ${VENV}/bin/activate
-                    echo "✅ Flask app would be deployed here (e.g., Docker, server, etc.)"
+                    echo "Flask app would be deployed here (e.g., Docker, server, etc.)"
                 '''
             }
         }
