@@ -6,7 +6,7 @@ pipeline {
             steps {
                 echo "Testing Jenkins agent connection..."
                 sh '''
-                    echo "✅ Agent is working properly!"
+                    echo "Agent is working properly!"
                     hostname
                     whoami
                     python3 --version || echo "Python not found"
