@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'flask-app-agent' }
 
     environment {
         // Set Python virtual environment path
