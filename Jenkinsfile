@@ -1,5 +1,5 @@
 pipeline {
-    agent { label flaskapp-agent }
+    agent { label ("flaskapp-agent") }
 
     stages {
         stage('Check Agent Connection') {
