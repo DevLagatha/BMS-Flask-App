@@ -2,6 +2,21 @@ pipeline {
     agent {
         kubernetes {
             inheritFrom 'flaskapp-agent'
+             yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: python
+    image: python:3.9-slim
+    command: ['cat']
+    tty: true
+  - name: docker
+    image: docker:24.0.7-dind
+    securityContext:
+      privileged: true
+    tty: true
+"""
         }
     }
 
