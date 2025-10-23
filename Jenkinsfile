@@ -1,7 +1,8 @@
 pipeline {
     agent {
-    kubernetes 
+    kubernetes {
         inheritFrom 'flaskapp-agent' 
+    }
     }
 
     stages {
