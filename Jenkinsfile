@@ -2,8 +2,7 @@ pipeline {
     agent {
         kubernetes {
             inheritFrom 'flaskapp-agent'
-            defaultContainer 'python'
-            yaml """
+             """
 apiVersion: v1
 kind: Pod
 spec:
@@ -102,4 +101,8 @@ spec:
             echo "Pipeline failed — check logs for details."
         }
     }
+    always {
+                    archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
+                    junit 'build/reports/**/*.xml'
+                }
 }
