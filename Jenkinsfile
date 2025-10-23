@@ -1,5 +1,7 @@
 pipeline {
-    agent { label 'flaskapp-agent' }
+    agent {
+    kubernetes { label 'flaskapp-agent' }
+    }
 
     stages {
         stage('Check Agent Connection') {
