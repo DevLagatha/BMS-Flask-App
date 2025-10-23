@@ -2,9 +2,20 @@ pipeline {
     agent {
         kubernetes {
             inheritFrom 'flaskapp-agent'
-        }
-    }
-
+            agentContainer 'jnlp'
+            cloud 'Kubernetes'
+            namespace 'cboc'
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: python
+    image: python:3.9-slim
+    command: [\'cat\']
+    tty: true'''
+  }
+}
     environment {
         APP_NAME = "BMS-Flask-App"
     }
