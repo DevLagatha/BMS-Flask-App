@@ -2,16 +2,6 @@ pipeline {
     agent {
         kubernetes {
             inheritFrom 'flaskapp-agent'
-             """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: python
-    image: python:3.9-slim
-    command: ['cat']
-    tty: true
-"""
         }
     }
 
@@ -93,6 +83,8 @@ spec:
     post {
         always {
             echo "Pipeline finished (whether success or fail)."
+            archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
+            junit 'build/reports/**/*.xml'
         }
         success {
             echo "Build, Test, and Deployment successful!"
@@ -101,8 +93,4 @@ spec:
             echo "Pipeline failed — check logs for details."
         }
     }
-    always {
-                    archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
-                    junit 'build/reports/**/*.xml'
-                }
 }
