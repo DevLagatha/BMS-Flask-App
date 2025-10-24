@@ -1,7 +1,7 @@
 pipeline {
     agent {
         kubernetes {
-            inheritFrom 'flaskapp-agent'
+            inheritFrom any
             agentContainer 'jnlp'
             cloud 'Kubernetes'
             namespace 'cboc'
