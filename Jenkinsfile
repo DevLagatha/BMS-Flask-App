@@ -59,21 +59,21 @@ spec:
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build podman Image') {
             steps {
-                echo "Building Docker image for ${env.APP_NAME}..."
+                echo "Building podman image for ${env.APP_NAME}..."
                 sh '''
-                    docker build -t myregistry.local/${APP_NAME}:latest .
+                    podman build -t myregistry.local/${APP_NAME}:latest .
                 '''
             }
         }
 
         stage('Push Image to Registry') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'PODMAN_USER', passwordVariable: 'PODMAN_PASS')]) {
                     sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin myregistry.local
-                        docker push myregistry.local/${APP_NAME}:latest
+                        echo "$PODMAN_PASS" | podman login -u "$PODMAN_USER" --password-stdin myregistry.local
+                        podman push myregistry.local/${APP_NAME}:latest
                     '''
                 }
             }
@@ -85,7 +85,7 @@ spec:
                 sh '''
                     # For OpenShift/Kubernetes deployment
                     oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev || \
-                    kubectl set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev
+                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev
                 '''
             }
         }
