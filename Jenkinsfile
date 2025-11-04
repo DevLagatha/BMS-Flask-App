@@ -94,8 +94,11 @@ spec:
     post {
         always {
             echo "Pipeline finished (whether success or fail)."
-            archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
-            junit 'build/reports/**/*.xml'
+            container('python'){
+                sh 'echo "Archiving reports..."'
+                archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
+                junit 'build/reports/**/*.xml'
+            }
         }
         success {
             echo "Build, Test, and Deployment successful!"
