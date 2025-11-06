@@ -104,6 +104,7 @@ spec:
                 echo "Pipeline failed — check logs for details."
             }
         }
+    }
 
         
         
