@@ -99,7 +99,7 @@ spec:
             container('python'){
                 sh 'echo "Archiving reports..."'
                 archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
-                junit 'build/reports/**/*.xml'
+                junit 'reports/test-results.xml'
             }
         }
         success {
