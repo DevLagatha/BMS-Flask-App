@@ -1,3 +1,4 @@
+
 pipeline {
     agent {
         kubernetes {
@@ -107,6 +108,9 @@ post {
         echo "Pipeline failed — check logs for details."
     }
 }
+    }
+        
+    
 
 
         
