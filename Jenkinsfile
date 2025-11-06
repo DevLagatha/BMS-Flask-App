@@ -49,8 +49,10 @@ spec:
                 container('python') {
                     echo "Running unit tests..."
                     sh '''
-                        if [ -f tests/test_app.py ]; then
-                            pytest -v --maxfail=1 --disable-warnings
+                        export PYTHONPATH=$(pwd)
+                        pytest -v --maxfail=1 --disable-warnings --junitxml=reports/test-results.xml
+                        if 
+                        [ -f tests  /test_app.py ];                             
                         else
                             echo "No tests found, skipping..."
                         fi
