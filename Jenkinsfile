@@ -59,56 +59,53 @@ spec:
                     echo "<testsuite></testsuite>" > reports/test-results.xml
                 fi
             '''
+                }
+            }
         }
-    }
-}
-
-stage('Build podman Image') {
-    steps {
-        echo "Building podman image for ${env.APP_NAME}..."
-        sh '''
-            podman build -t myregistry.local/${APP_NAME}:latest .
-        '''
-    }
-}
-
-stage('Push Image to Registry') {
-    steps {
-        withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'PODMAN_USER', passwordVariable: 'PODMAN_PASS')]) {
-            sh '''
-                echo "$PODMAN_PASS" | podman login -u "$PODMAN_USER" --password-stdin myregistry.local
-                podman push myregistry.local/${APP_NAME}:latest
-            '''
+        stage('Build podman Image') {
+            steps {
+                echo "Building podman image for ${env.APP_NAME}..."
+                sh '''
+                podman build -t myregistry.local/${APP_NAME}:latest .
+                '''
+            }
         }
-    }
-}
-
-stage('Deploy to Dev Environment') {
-    steps {
-        echo "Deploying ${APP_NAME} to Dev environment..."
-        sh '''
-            oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev || \
-            oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev
-        '''
-    }
-}
-
-post {
-    always {
-        echo "Pipeline finished (whether success or fail)."
-        container('python') {
-            echo "Archiving reports..."
-            junit 'reports/test-results.xml'
+        stage('Push Image to Registry') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'PODMAN_USER', passwordVariable: 'PODMAN_PASS')]) {
+                    sh '''
+                    echo "$PODMAN_PASS" | podman login -u "$PODMAN_USER" --password-stdin myregistry.local
+                    podman push myregistry.local/${APP_NAME}:latest
+                    '''
+                }
+            }
         }
-    }
-    success {
-        echo "Build, Test, and Deployment successful!"
-    }
-    failure {
-        echo "Pipeline failed — check logs for details."
-    }
-}
-    }
+        stage('Deploy to Dev Environment') {
+            steps {
+                echo "Deploying ${APP_NAME} to Dev environment..."
+                sh '''
+                oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev || \
+                oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev
+                '''
+            }
+        }
+        post {
+            always {
+                echo "Pipeline finished (whether success or fail)."
+                container('python') {
+                    echo "Archiving reports..."
+                    junit 'reports/test-results.xml'
+                }
+            }
+            success {
+                echo "Build, Test, and Deployment successful!"
+            }
+            failure {
+                echo "Pipeline failed — check logs for details."
+            }
+        }
+
+        
         
     
 
