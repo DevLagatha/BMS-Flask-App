@@ -1,15 +1,93 @@
 pipeline {
-    agent { label 'flaskapp-agent' }
+    agent {
+        kubernetes {
+            inheritFrom 'flaskapp-agent'
+            agentContainer 'jnlp'
+            cloud 'Kubernetes'
+            namespace 'cboc'
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: python
+    image: python:3.9-slim
+    command: [\'cat\']
+    tty: true'''
+  }
+}
+    environment {
+        APP_NAME = "BMS-Flask-App"
+    }
 
     stages {
-        stage('Check Agent Connection') {
+        stage('Checkout') {
             steps {
-                echo "Testing Jenkins agent connection..."
+                echo "Checking out source code..."
+                git branch: 'main', url: 'https://github.com/DevLagatha/BMS-Flask-App.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                container('python') {
+                    echo "Installing Python dependencies..."
+                    sh '''
+                        pip install --upgrade pip
+                        if [ -f requirements.txt ]; then
+                            pip install -r requirements.txt
+                        else
+                            echo "No requirements.txt found, skipping..."
+                        fi
+                    '''
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                container('python') {
+                    echo "Running unit tests..."
+                    sh '''
+                        export PYTHONPATH=$(pwd)
+                        pytest -v --maxfail=1 --disable-warnings --junitxml=reports/test-results.xml
+                        if 
+                        [ -f tests  /test_app.py ];                             
+                        else
+                            echo "No tests found, skipping..."
+                        fi
+                    '''
+                }
+            }
+        }
+
+        stage('Build podman Image') {
+            steps {
+                echo "Building podman image for ${env.APP_NAME}..."
                 sh '''
-                    echo "Agent is working properly!"
-                    hostname
-                    whoami
-                    python3 --version || echo "Python not found"
+                    podman build -t myregistry.local/${APP_NAME}:latest .
+                '''
+            }
+        }
+
+        stage('Push Image to Registry') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'PODMAN_USER', passwordVariable: 'PODMAN_PASS')]) {
+                    sh '''
+                        echo "$PODMAN_PASS" | podman login -u "$PODMAN_USER" --password-stdin myregistry.local
+                        podman push myregistry.local/${APP_NAME}:latest
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Dev Environment') {
+            steps {
+                echo "Deploying ${APP_NAME} to Dev environment..."
+                sh '''
+                    # For OpenShift/Kubernetes deployment
+                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev || \
+                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev
                 '''
             }
         }
@@ -18,6 +96,17 @@ pipeline {
     post {
         always {
             echo "Pipeline finished (whether success or fail)."
+            container('python'){
+                sh 'echo "Archiving reports..."'
+                archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
+                junit 'build/reports/**/*.xml'
+            }
+        }
+        success {
+            echo "Build, Test, and Deployment successful!"
+        }
+        failure {
+            echo "Pipeline failed — check logs for details."
         }
     }
 }
