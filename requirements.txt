@@ -1,3 +1,5 @@
 Flask
 pytest
+Flask-SQLAlchemy
+
 
