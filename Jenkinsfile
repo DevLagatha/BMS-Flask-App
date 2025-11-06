@@ -1,89 +1,112 @@
 pipeline {
-    agent any
-
+    agent {
+        kubernetes {
+            inheritFrom 'flaskapp-agent'
+            agentContainer 'jnlp'
+            cloud 'Kubernetes'
+            namespace 'cboc'
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: python
+    image: python:3.9-slim
+    command: [\'cat\']
+    tty: true'''
+  }
+}
     environment {
-        // Set Python virtual environment path
-        VENV = "venv"
+        APP_NAME = "BMS-Flask-App"
     }
 
     stages {
         stage('Checkout') {
             steps {
                 echo "Checking out source code..."
-                git branch: 'main', url: 'https://github.com/DevLagatha/bms-flask-app.git'
-            }
-        }
-
-        stage('Set up Environment') {
-            steps {
-                echo "Creating virtual environment..."
-                sh '''
-                    rm -rf ${VENV}
-                    python3 -m venv ${VENV}
-                    . ${VENV}/bin/activate
-                    python3 -m pip install --upgrade pip
-                '''
+                git branch: 'main', url: 'https://github.com/DevLagatha/BMS-Flask-App.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                echo "Installing dependencies..."
+                container('python') {
+                    echo "Installing Python dependencies..."
+                    sh '''
+                        pip install --upgrade pip
+                        if [ -f requirements.txt ]; then
+                            pip install -r requirements.txt
+                        else
+                            echo "No requirements.txt found, skipping..."
+                        fi
+                    '''
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                container('python') {
+                    echo "Running unit tests..."
+                    sh '''
+                        export PYTHONPATH=$(pwd)
+                        pytest -v --maxfail=1 --disable-warnings --junitxml=reports/test-results.xml
+                        if 
+                        [ -f tests  /test_app.py ];                             
+                        else
+                            echo "No tests found, skipping..."
+                        fi
+                    '''
+                }
+            }
+        }
+
+        stage('Build podman Image') {
+            steps {
+                echo "Building podman image for ${env.APP_NAME}..."
                 sh '''
-                    . ${VENV}/bin/activate
-                    if [ -f requirements.txt ]; then
-                        pip install -r requirements.txt
-                    else
-                        echo "⚠️ No requirements.txt found"
-                    fi
-                    pip install pytest
+                    podman build -t myregistry.local/${APP_NAME}:latest .
                 '''
             }
         }
 
-        stage('Run Tests') {
+        stage('Push Image to Registry') {
             steps {
-                echo "Running unit tests..."
-                sh '''
-                    set +e
-                    . ${VENV}/bin/activate
-                    pytest -v || echo "⚠️ Some tests failed or not found, continuing..."
-                    exit 0
-                '''
+                withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'PODMAN_USER', passwordVariable: 'PODMAN_PASS')]) {
+                    sh '''
+                        echo "$PODMAN_PASS" | podman login -u "$PODMAN_USER" --password-stdin myregistry.local
+                        podman push myregistry.local/${APP_NAME}:latest
+                    '''
+                }
             }
         }
 
-        stage('Build Application') {
+        stage('Deploy to Dev Environment') {
             steps {
-                echo "Building Flask app..."
+                echo "Deploying ${APP_NAME} to Dev environment..."
                 sh '''
-                    . ${VENV}/bin/activate
-                    python -m compileall .
-                '''
-            }
-        }
-
-        stage('Deploy (Local Simulation)') {
-            steps {
-                echo "🔹 Simulating deployment..."
-                sh '''
-                    . ${VENV}/bin/activate
-                    echo "✅ Flask app would be deployed here (e.g., Docker, server, etc.)"
+                    # For OpenShift/Kubernetes deployment
+                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev || \
+                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev
                 '''
             }
         }
     }
 
     post {
+        always {
+            echo "Pipeline finished (whether success or fail)."
+            container('python'){
+                sh 'echo "Archiving reports..."'
+                archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
+                junit 'build/reports/**/*.xml'
+            }
+        }
         success {
-            echo "Pipeline completed successfully! All stages passed."
+            echo "Build, Test, and Deployment successful!"
         }
         failure {
-            echo "Pipeline failed. Check the stage logs for details."
-        }
-        always {
-            echo "Cleaning up workspace..."
-            sh "deactivate || true"
+            echo "Pipeline failed — check logs for details."
         }
     }
 }
