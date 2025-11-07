@@ -12,12 +12,10 @@ spec:
   containers:
   - name: python
     image: python:3.9-slim
-    command: ['cat']
-    tty: true
-'''
-        }
-    }
-
+    command: [\'cat\']
+    tty: true'''
+  }
+}
     environment {
         APP_NAME = "BMS-Flask-App"
     }
@@ -51,35 +49,31 @@ spec:
                 container('python') {
                     echo "Running unit tests..."
                     sh '''
-                        mkdir -p reports
                         if [ -f tests/test_app.py ]; then
-                            echo "Tests found — running pytest..."
-                            export PYTHONPATH=$(pwd)
-                            pytest -v --maxfail=1 --disable-warnings --junitxml=reports/test-results.xml
+                            pytest -v --maxfail=1 --disable-warnings
                         else
-                            echo "No tests found, skipping pytest..."
-                            echo "<testsuite></testsuite>" > reports/test-results.xml
+                            echo "No tests found, skipping..."
                         fi
                     '''
                 }
             }
         }
 
-        stage('Build podman Image') {
+        stage('Build Docker Image') {
             steps {
-                echo "Building podman image for ${env.APP_NAME}..."
+                echo "Building Docker image for ${env.APP_NAME}..."
                 sh '''
-                    podman build -t myregistry.local/${APP_NAME}:latest .
+                    docker build -t myregistry.local/${APP_NAME}:latest .
                 '''
             }
         }
 
         stage('Push Image to Registry') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'PODMAN_USER', passwordVariable: 'PODMAN_PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
-                        echo "$PODMAN_PASS" | podman login -u "$PODMAN_USER" --password-stdin myregistry.local
-                        podman push myregistry.local/${APP_NAME}:latest
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin myregistry.local
+                        docker push myregistry.local/${APP_NAME}:latest
                     '''
                 }
             }
@@ -89,20 +83,19 @@ spec:
             steps {
                 echo "Deploying ${APP_NAME} to Dev environment..."
                 sh '''
+                    # For OpenShift/Kubernetes deployment
                     oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev || \
-                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev
+                    kubectl set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev
                 '''
             }
         }
-    }  
+    }
 
     post {
         always {
             echo "Pipeline finished (whether success or fail)."
-            container('python') {
-                echo "Archiving reports..."
-                junit 'reports/test-results.xml'
-            }
+            archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
+            junit 'build/reports/**/*.xml'
         }
         success {
             echo "Build, Test, and Deployment successful!"
