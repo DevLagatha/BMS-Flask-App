@@ -170,9 +170,9 @@ if __name__ == '__main__':
         
         if User.query.count() == 0:
             sample_users = [
-                User(name='John Doe', email='john@company.com', department='IT'),
-                User(name='Jane Smith', email='jane@company.com', department='HR'),
-                User(name='Mike Johnson', email='mike@company.com', department='Finance')
+                User(name='Jane', email='jane@company.com', department='IT'),
+                User(name='Mathew Shelby', email='mathew@company.com', department='HR'),
+                User(name='Mango Johnson', email='mango@company.com', department='Finance')
             ]
             for user in sample_users:
                 db.session.add(user)
@@ -180,3 +180,4 @@ if __name__ == '__main__':
         db.session.commit()
     
     app.run(debug=True)
+
