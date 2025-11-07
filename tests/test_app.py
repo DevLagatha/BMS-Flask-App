@@ -1,24 +1,21 @@
 # tests/test_app.py
-
-def test_example():
-    assert 2 + 2 == 4
-    
+ 
 import pytest
 from datetime import datetime
 from app import app, db, Booking, Room, User
 
 @pytest.fixture
 def client():
-    # Setup: configure test client and in-memory database
+    # this one configures test client and in-memory database
     app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     client = app.test_client()
 
     with app.app_context():
         db.create_all()
-        # Create dummy Room and User for testing
+        # This one creates a Room and User for testing
         room = Room(name="Conference Room A")
-        user = User(name="John Doe", email="john@example.com")
+        user = User(name="Jane ", email="jane@example.com")
         db.session.add_all([room, user])
         db.session.commit()
 
@@ -30,10 +27,10 @@ def client():
 
 
 def test_get_bookings_page(client):
-    """Test that the /bookings page loads successfully."""
+    """Make sure that the /bookings page loads successfully."""
     response = client.get('/bookings')
     assert response.status_code == 200
-    assert b'bookings' in response.data.lower()  # checks template content
+    assert b'bookings' in response.data.lower()                                                               # checks template content
 
 
 def test_add_booking_post(client):

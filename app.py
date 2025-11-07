@@ -10,7 +10,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Models
 class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -170,9 +169,9 @@ if __name__ == '__main__':
         
         if User.query.count() == 0:
             sample_users = [
-                User(name='John Doe', email='john@company.com', department='IT'),
-                User(name='Jane Smith', email='jane@company.com', department='HR'),
-                User(name='Mike Johnson', email='mike@company.com', department='Finance')
+                User(name='Jane ', email='jane@company.com', department='IT'),
+                User(name='Mathew Shelby', email='mathew@company.com', department='HR'),
+                User(name='Mango Johnson', email='mango@company.com', department='Finance')
             ]
             for user in sample_users:
                 db.session.add(user)
