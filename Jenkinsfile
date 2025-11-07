@@ -12,10 +12,12 @@ spec:
   containers:
   - name: python
     image: python:3.9-slim
-    command: [\'cat\']
-    tty: true'''
-  }
-}
+    command: ['cat']
+    tty: true
+'''
+        }
+    }
+
     environment {
         APP_NAME = "BMS-Flask-App"
     }
@@ -49,12 +51,14 @@ spec:
                 container('python') {
                     echo "Running unit tests..."
                     sh '''
-                        export PYTHONPATH=$(pwd)
-                        pytest -v --maxfail=1 --disable-warnings --junitxml=reports/test-results.xml
-                        if 
-                        [ -f tests  /test_app.py ];                             
+                        mkdir -p reports
+                        if [ -f tests/test_app.py ]; then
+                            echo "Tests found — running pytest..."
+                            export PYTHONPATH=$(pwd)
+                            pytest -v --maxfail=1 --disable-warnings --junitxml=reports/test-results.xml
                         else
-                            echo "No tests found, skipping..."
+                            echo "No tests found, skipping pytest..."
+                            echo "<testsuite></testsuite>" > reports/test-results.xml
                         fi
                     '''
                 }
@@ -85,21 +89,19 @@ spec:
             steps {
                 echo "Deploying ${APP_NAME} to Dev environment..."
                 sh '''
-                    # For OpenShift/Kubernetes deployment
                     oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev || \
                     oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev
                 '''
             }
         }
-    }
+    }  
 
     post {
         always {
             echo "Pipeline finished (whether success or fail)."
-            container('python'){
-                sh 'echo "Archiving reports..."'
-                archiveArtifacts artifacts: 'build/libs/**/*.jar', fingerprint: true
-                junit 'build/reports/**/*.xml'
+            container('python') {
+                echo "Archiving reports..."
+                junit 'reports/test-results.xml'
             }
         }
         success {
