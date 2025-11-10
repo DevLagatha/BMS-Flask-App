@@ -77,7 +77,7 @@ spec:
         stage('Build Docker Image  ') 
         {
             steps {
-                container('docker') 
+                container('oc') 
                 {
 
                 echo "Building Docker image for ${env.APP_NAME}..."
