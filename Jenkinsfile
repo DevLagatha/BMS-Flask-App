@@ -69,7 +69,6 @@ spec:
             steps {
                 echo "Building Docker image for ${env.APP_NAME}..."
                 sh '''
-                    dnf install -y Docker
                     docker build -t myregistry.local/${APP_NAME}:latest .
                 '''
             }
