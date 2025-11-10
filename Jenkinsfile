@@ -14,6 +14,17 @@ spec:
     image: python:3.9-slim
     command: ['cat']
     tty: true
+  - name: docker
+    image: docker:24-cli     
+    command: ['cat']
+    tty: true
+    volumeMounts:
+    - name: dockersock
+      mountPath: /var/run/docker.sock
+  volumes:
+  - name: dockersock
+    hostPath:
+      path: /var/run/docker.sock
 '''
         }
     }
@@ -65,14 +76,20 @@ spec:
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Docker Image') 
+        {
             steps {
+                container('docker') 
+                {
+
                 echo "Building Docker image for ${env.APP_NAME}..."
                 sh '''
                     docker build -t myregistry.local/${APP_NAME}:latest .
                 '''
+                }
             }
         }
+
 
         stage('Push Image to Registry') {
             steps {
