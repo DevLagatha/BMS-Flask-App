@@ -70,7 +70,7 @@ spec:
             }
         }
 
-        stage('Build Docker Image') 
+        stage('Build Docker Image  ') 
         {
             steps {
                 container('docker') 
@@ -78,7 +78,9 @@ spec:
 
                 echo "Building Docker image for ${env.APP_NAME}..."
                 sh '''
-                    docker build -t myregistry.local/${APP_NAME}:latest .
+                    oc start-build bms-flask-app --wait --follow -n cboc
+
+                                             // docker build -t myregistry.local/${APP_NAME}:latest .
                 '''
                 }
             }
@@ -90,7 +92,7 @@ spec:
                 withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin myregistry.local
-                        docker push myregistry.local/${APP_NAME}:latest
+                        // docker push myregistry.local/${APP_NAME}:latest
                     '''
                 }
             }
