@@ -17,7 +17,7 @@ def client():
     with app.app_context():
         db.create_all()
         # Create dummy Room and User for testing
-        room = Room(name="Conference Room A")
+        room = Room(name="Conference Room A",capacity=10,location="1st Floor",amenities="Projector, Whiteboard")
         capacity=10,
         location="1st Floor",
         amenities="Projector, Whiteboard"
