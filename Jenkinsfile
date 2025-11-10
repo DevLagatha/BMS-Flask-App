@@ -65,22 +65,22 @@ spec:
             }
         }
 
-        stage('Build podman Image') {
+        stage('Build Docker Image') {
             steps {
-                echo "Building podman image for ${env.APP_NAME}..."
+                echo "Building Docker image for ${env.APP_NAME}..."
                 sh '''
-                    dnf install -y podman
-                    podman build -t myregistry.local/${APP_NAME}:latest .
+                    dnf install -y Docker
+                    docker build -t myregistry.local/${APP_NAME}:latest .
                 '''
             }
         }
 
         stage('Push Image to Registry') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'PODMAN_USER', passwordVariable: 'PODMAN_PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
-                        echo "$PODMAN_PASS" | podman login -u "$PODMAN_USER" --password-stdin myregistry.local
-                        podman push myregistry.local/${APP_NAME}:latest
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin myregistry.local
+                        docker push myregistry.local/${APP_NAME}:latest
                     '''
                 }
             }
