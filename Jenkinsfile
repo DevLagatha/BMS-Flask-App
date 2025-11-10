@@ -69,6 +69,7 @@ spec:
             steps {
                 echo "Building podman image for ${env.APP_NAME}..."
                 sh '''
+                    dnf install -y podman
                     podman build -t myregistry.local/${APP_NAME}:latest .
                 '''
             }
