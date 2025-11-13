@@ -14,14 +14,15 @@ spec:
     image: python:3.9-slim
     command: ['cat']
     tty: true
-  - name: oc 
-    image:  quay.io/openshift/origin-cli:4.12
+  - name: oc
+    image: quay.io/openshift/origin-cli:4.12
     command: ['cat']
     tty: true
-  - name: podman
-    image: docker:24-cli 
+  - name: docker
+    image: docker:24-cli     
     command: ['cat']
     tty: true
+    
 '''
         }
     }
@@ -73,21 +74,28 @@ spec:
             }
         }
 
-        stage('Build podman Image') {
+        stage('Build Docker Image  ') 
+        {
             steps {
-                echo "Building podman image for ${env.APP_NAME}..."
+                container('oc') 
+                {
+
+                echo "Building Docker image for ${env.APP_NAME}..."
                 sh '''
-                    podman build -t myregistry.local/${APP_NAME}:latest .
+                    oc start-build bms-flask-app --wait --follow -n cboc
+
                 '''
+                }
             }
         }
 
+
         stage('Push Image to Registry') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'PODMAN_USER', passwordVariable: 'PODMAN_PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
-                        echo "$PODMAN_PASS" | podman login -u "$PODMAN_USER" --password-stdin myregistry.local
-                        podman push myregistry.local/${APP_NAME}:latest
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin myregistry.local
+                        //docker push myregistry.local/${APP_NAME}:latest
                     '''
                 }
             }
@@ -97,7 +105,8 @@ spec:
             steps {
                 echo "Deploying ${APP_NAME} to Dev environment..."
                 sh '''
-                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n cboc || \
+                    oc project cboc
+                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n cboc || 
                     oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n cboc
                     oc rollout status deployment/${APP_NAME} -n cboc
                 '''
