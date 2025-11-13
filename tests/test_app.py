@@ -13,9 +13,12 @@ def client():
 
     with app.app_context():
         db.create_all()
-        # This one creates a Room and User for testing
-        room = Room(name="Conference Room A")
-        user = User(name="Jane ", email="jane@example.com")
+        # Create dummy Room and User for testing
+        room = Room(name="Conference Room A",capacity=10,location="1st Floor",amenities="Projector, Whiteboard")
+        capacity=10,
+        location="1st Floor",
+        amenities="Projector, Whiteboard"
+        user = User(name="Jane", email="jane@example.com")
         db.session.add_all([room, user])
         db.session.commit()
 
@@ -30,7 +33,7 @@ def test_get_bookings_page(client):
     """Make sure that the /bookings page loads successfully."""
     response = client.get('/bookings')
     assert response.status_code == 200
-    assert b'bookings' in response.data.lower()                                                               # checks template content
+    assert b'bookings' in response.data.lower()                                      # checks template content
 
 
 def test_add_booking_post(client):
