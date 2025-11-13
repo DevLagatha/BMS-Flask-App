@@ -14,6 +14,14 @@ spec:
     image: python:3.9-slim
     command: ['cat']
     tty: true
+  - name: oc 
+    image:  quay.io/openshift/origin-cli:4.12
+    command: ['cat']
+    tty: true
+  - name: podman
+    image: docker:24-cli 
+    command: ['cat']
+    tty: true
 '''
         }
     }
@@ -89,8 +97,9 @@ spec:
             steps {
                 echo "Deploying ${APP_NAME} to Dev environment..."
                 sh '''
-                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev || \
-                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev
+                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n cboc || \
+                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n cboc
+                    oc rollout status deployment/${APP_NAME} -n cboc
                 '''
             }
         }
