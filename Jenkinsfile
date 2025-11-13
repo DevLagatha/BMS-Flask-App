@@ -105,10 +105,10 @@ spec:
             steps {
                 echo "Deploying ${APP_NAME} to Dev environment..."
                 sh '''
-                    oc project dep-tst
-                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dep-tst || 
-                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dep-tst
-                    oc rollout status deployment/${APP_NAME} -n dep-tst
+                    oc project cboc
+                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n cboc || 
+                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n cboc
+                    oc rollout status deployment/${APP_NAME} -n cboc
                 '''
             }
         }
