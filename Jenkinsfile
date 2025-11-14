@@ -89,7 +89,7 @@ spec:
                 echo "Building Docker image for ${env.APP_NAME}..."
                 sh '''
                     oc start-build bms-flask-app --wait --follow -n 
-                    oc tag cboc/bms-flask-app:latest cboc/bms-flask-app:prod -n cboc
+                    oc tag cboc/bms-flask-app:latest cboc/bms-flask-app:dep-tst
                 '''
                 }
             }
@@ -111,9 +111,9 @@ spec:
             steps {
                 echo "Deploying ${APP_NAME} to Dev environment..."
                 sh '''
-                    oc project cboc
-                    oc set image deployment/bms-flask-app bms-flask-app=cboc/bms-flask-app:prod 
-                    oc rollout status deployment/${APP_NAME} -n cboc
+                    oc project dep-tst
+                    oc set image deployment/bms-flask-app bms-flask-app=cboc/bms-flask-app:dep-tst
+                    oc rollout status deployment/${APP_NAME} -n dep-tst
                 '''
             }
         }
