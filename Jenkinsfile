@@ -22,6 +22,11 @@ spec:
     image: docker:24-cli     
     command: ['cat']
     tty: true
+  - name: docker-image
+    image:  quay.io/openshift/origin-cli:4.12
+    command: ['cat']
+    tty: true
+
     
 '''
         }
@@ -67,52 +72,40 @@ spec:
                             pytest -v --maxfail=1 --disable-warnings --junitxml=reports/test-results.xml
                         else
                             echo "No tests found, skipping pytest..."
-                            echo "<testsuite></testsuite>" > reports/test-results.xml
+                            echo "<testsuite></testsuite>" > /reports/test-results.xml
                         fi
                     '''
+
                 }
             }
         }
 
-        stage('Build Docker Image  ') 
-        {
+        stage('Build Docker Image') {
             steps {
-                container('oc') 
-                {
-
-                echo "Building Docker image for ${env.APP_NAME}..."
-                sh '''
-                    oc start-build bms-flask-app --wait --follow -n cboc
-
-                '''
-                }
-            }
-        }
-
-
-        stage('Push Image to Registry') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                container('oc') {
                     sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin myregistry.local
-                        //docker push myregistry.local/${APP_NAME}:latest
+                    oc start-build bms-flask-app --wait --follow -n cboc
+                    oc tag cboc/bms-flask-app:latest cboc/bms-flask-app:prod -n cboc
                     '''
+                    }
+                    
+                }
+                 
+            }
+        
+        stage('Deploy') {
+            steps {
+                container('oc') {
+                    sh '''
+                    oc project cboc
+                    oc set image deployment/bms-flask-app \
+                    bms-flask-app=image-registry.openshift-image-registry.svc:5000/cboc/bms-flask-app:prod
+                    oc rollout status deployment/bms-flask-app -n cboc
+                   '''
+                    }
                 }
             }
         }
-
-        stage('Deploy to Dev Environment') {
-            steps {
-                echo "Deploying ${APP_NAME} to Dev environment..."
-                sh '''
-                    oc project cboc
-                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n cboc || 
-                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n cboc
-                    oc rollout status deployment/${APP_NAME} -n cboc
-                '''
-            }
-        }
-    }  
 
     post {
         always {
