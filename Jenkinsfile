@@ -72,7 +72,7 @@ spec:
                             pytest -v --maxfail=1 --disable-warnings --junitxml=reports/test-results.xml
                         else
                             echo "No tests found, skipping pytest..."
-                            echo "<testsuite></testsuite>" > ~/home/agatha/reports/test-results.xml
+                            echo "<testsuite></testsuite>" > /reports/test-results.xml
                         fi
                     '''
 
@@ -88,7 +88,7 @@ spec:
 
                 echo "Building Docker image for ${env.APP_NAME}..."
                 sh '''
-                    oc start-build bms-flask-app --wait --follow -n 
+                    oc start-build bms-flask-app --wait --follow -n cboc  
                     oc tag cboc/bms-flask-app:latest cboc/bms-flask-app:dep-tst
                 '''
                 }
