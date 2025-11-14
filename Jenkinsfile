@@ -101,7 +101,7 @@ spec:
                withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                    sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin myregistry.local
-                        docker push myregistry.local/${APP_NAME}:latest
+                        docker push myregistry.local/bms-flask-app:latest
                    '''
                  }
             }
@@ -113,7 +113,7 @@ spec:
                 sh '''
                     oc project dep-tst
                     oc set image deployment/bms-flask-app bms-flask-app=cboc/bms-flask-app:dep-tst
-                    oc rollout status deployment/${APP_NAME} -n dep-tst
+                    oc rollout status deployment/bms-flask-app -n dep-tst
                 '''
             }
         }
