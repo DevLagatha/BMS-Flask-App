@@ -19,16 +19,10 @@ spec:
     command: ['cat']
     tty: true
   - name: docker
-<<<<<<< HEAD
-    image: docker:24-cli    
-    command: ['cat']
-    tty: true
-=======
     image: docker:24-cli     
     command: ['cat']
     tty: true
     
->>>>>>> aa5df4d470c6d1f243ee3dcc0200feba2c8872c0
 '''
         }
     }
