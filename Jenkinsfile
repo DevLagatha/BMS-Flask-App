@@ -75,7 +75,7 @@ spec:
                             echo "<testsuite></testsuite>" > ~/home/agatha/reports/test-results.xml
                         fi
                     '''
-                    
+
                 }
             }
         }
@@ -96,16 +96,16 @@ spec:
         }
 
 
-        //stage('Push Image to Registry') {
-            //steps {
-               // withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                   // sh '''
-                        //echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin myregistry.local
-                        //docker push myregistry.local/${APP_NAME}:latest
-                   // '''
-             //   }
-          //  }
-        //}
+        stage('Push Image to Registry') {
+            steps {
+               withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                   sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin myregistry.local
+                        docker push myregistry.local/${APP_NAME}:latest
+                   '''
+                 }
+            }
+      }
 
         stage('Deploy to Dev Environment') {
             steps {
