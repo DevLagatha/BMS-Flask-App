@@ -14,17 +14,23 @@ def client():
     with app.app_context():
         db.create_all()
 <<<<<<< HEAD
+<<<<<<< HEAD
         # This one creates a Room and User for testing
         room = Room(name="Conference Room A")
         user = User(name="Jane ", email="jane@example.com")
 =======
+=======
+>>>>>>> c2ce047a5d5f09a8ad1f3bcdf9e9229474507332
         # Create dummy Room and User for testing
         room = Room(name="Conference Room A",capacity=10,location="1st Floor",amenities="Projector, Whiteboard")
         capacity=10,
         location="1st Floor",
         amenities="Projector, Whiteboard"
         user = User(name="Jane", email="jane@example.com")
+<<<<<<< HEAD
 >>>>>>> aa5df4d470c6d1f243ee3dcc0200feba2c8872c0
+=======
+>>>>>>> c2ce047a5d5f09a8ad1f3bcdf9e9229474507332
         db.session.add_all([room, user])
         db.session.commit()
 
@@ -40,10 +46,14 @@ def test_get_bookings_page(client):
     response = client.get('/bookings')
     assert response.status_code == 200
 <<<<<<< HEAD
+<<<<<<< HEAD
     assert b'bookings' in response.data.lower()                                                               # checks template content
 =======
     assert b'bookings' in response.data.lower()                                      # checks template content
 >>>>>>> aa5df4d470c6d1f243ee3dcc0200feba2c8872c0
+=======
+    assert b'bookings' in response.data.lower()                                      # checks template content
+>>>>>>> c2ce047a5d5f09a8ad1f3bcdf9e9229474507332
 
 
 def test_add_booking_post(client):
