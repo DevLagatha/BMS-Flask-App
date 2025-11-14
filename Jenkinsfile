@@ -22,6 +22,11 @@ spec:
     image: docker:24-cli     
     command: ['cat']
     tty: true
+  - name: docker-image
+    image: image-registry.openshift-image-registry.svc:5000/cboc/bms-flask-app:latest
+    command: ['cat']
+    tty: true
+
     
 '''
         }
@@ -82,32 +87,31 @@ spec:
 
                 echo "Building Docker image for ${env.APP_NAME}..."
                 sh '''
-                    oc start-build bms-flask-app --wait --follow -n cboc
-
+                    oc start-build bms-flask-app --wait --follow -n 
+                    oc tag cboc/bms-flask-app:latest cboc/bms-flask-app:prod -n cboc
                 '''
                 }
             }
         }
 
 
-        stage('Push Image to Registry') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin myregistry.local
+        //stage('Push Image to Registry') {
+            //steps {
+               // withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                   // sh '''
+                        //echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin myregistry.local
                         //docker push myregistry.local/${APP_NAME}:latest
-                    '''
-                }
-            }
-        }
+                   // '''
+             //   }
+          //  }
+        //}
 
         stage('Deploy to Dev Environment') {
             steps {
                 echo "Deploying ${APP_NAME} to Dev environment..."
                 sh '''
                     oc project cboc
-                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n cboc || 
-                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n cboc
+                    oc set image deployment/bms-flask-app bms-flask-app=cboc/bms-flask-app:prod 
                     oc rollout status deployment/${APP_NAME} -n cboc
                 '''
             }
