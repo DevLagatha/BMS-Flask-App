@@ -19,9 +19,16 @@ spec:
     command: ['cat']
     tty: true
   - name: docker
+<<<<<<< HEAD
     image: docker:24-cli    
     command: ['cat']
     tty: true
+=======
+    image: docker:24-cli     
+    command: ['cat']
+    tty: true
+    
+>>>>>>> aa5df4d470c6d1f243ee3dcc0200feba2c8872c0
 '''
         }
     }
@@ -66,28 +73,35 @@ spec:
                             pytest -v --maxfail=1 --disable-warnings --junitxml=reports/test-results.xml
                         else
                             echo "No tests found, skipping pytest..."
-                            echo "<testsuite></testsuite>" > reports/test-results.xml
+                            echo "<testsuite></testsuite>" > ~/home/agatha/reports/test-results.xml
                         fi
                     '''
                 }
             }
         }
 
-        stage('Build podman Image') {
+        stage('Build Docker Image  ') 
+        {
             steps {
-                echo "Building podman image for ${env.APP_NAME}..."
+                container('oc') 
+                {
+
+                echo "Building Docker image for ${env.APP_NAME}..."
                 sh '''
-                    podman build -t myregistry.local/${APP_NAME}:latest .
+                    oc start-build bms-flask-app --wait --follow -n cboc
+
                 '''
+                }
             }
         }
 
+
         stage('Push Image to Registry') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'PODMAN_USER', passwordVariable: 'PODMAN_PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
-                        echo "$PODMAN_PASS" | podman login -u "$PODMAN_USER" --password-stdin myregistry.local
-                        podman push myregistry.local/${APP_NAME}:latest
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin myregistry.local
+                        //docker push myregistry.local/${APP_NAME}:latest
                     '''
                 }
             }
@@ -97,8 +111,10 @@ spec:
             steps {
                 echo "Deploying ${APP_NAME} to Dev environment..."
                 sh '''
-                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev || \
-                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n dev
+                    oc project cboc
+                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n cboc || 
+                    oc set image deployment/${APP_NAME} ${APP_NAME}=myregistry.local/${APP_NAME}:latest -n cboc
+                    oc rollout status deployment/${APP_NAME} -n cboc
                 '''
             }
         }
