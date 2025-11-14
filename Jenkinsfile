@@ -23,7 +23,7 @@ spec:
     command: ['cat']
     tty: true
   - name: docker-image
-    image: image-registry.openshift-image-registry.svc:5000/cboc/bms-flask-app:latest
+    image:  quay.io/openshift/origin-cli:4.12
     command: ['cat']
     tty: true
 
