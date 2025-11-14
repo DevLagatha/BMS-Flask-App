@@ -67,7 +67,7 @@ spec:
                             pytest -v --maxfail=1 --disable-warnings --junitxml=reports/test-results.xml
                         else
                             echo "No tests found, skipping pytest..."
-                            echo "<testsuite></testsuite>" > reports/test-results.xml
+                            echo "<testsuite></testsuite>" > ~/home/agatha/reports/test-results.xml
                         fi
                     '''
                 }
