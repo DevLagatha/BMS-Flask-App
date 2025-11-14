@@ -80,44 +80,32 @@ spec:
             }
         }
 
-        stage('Build Docker Image  ') 
-        {
+        stage('Build Docker Image') {
             steps {
-                container('oc') 
-                {
-
-                echo "Building Docker image for ${env.APP_NAME}..."
-                sh '''
-                    oc start-build bms-flask-app --wait --follow -n cboc  
-                    oc tag cboc/bms-flask-app:latest cboc/bms-flask-app:dep-tst -n cboc
-                '''
+                container('oc') {
+                    sh '''
+                    oc start-build bms-flask-app --wait --follow -n cboc
+                    oc tag cboc/bms-flask-app:latest cboc/bms-flask-app:prod -n cboc
+                    '''
+                    }
+                    
+                }
+                 
+            }
+        
+        stage('Deploy') {
+            steps {
+                container('oc') {
+                    sh '''
+                    oc project cboc
+                    oc set image deployment/bms-flask-app \
+                    bms-flask-app=image-registry.openshift-image-registry.svc:5000/cboc/bms-flask-app:prod
+                    oc rollout status deployment/bms-flask-app -n cboc
+                   '''
+                    }
                 }
             }
-        }
 
-
-        stage('Push Image to Registry') {
-            steps {
-               withCredentials([usernamePassword(credentialsId: 'podmanhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                   sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin myregistry.local
-                        docker push myregistry.local/bms-flask-app:latest
-                   '''
-                 }
-            }
-      }
-
-        stage('Initializing Deployment to Dev Environment') {
-            steps {
-                echo "Deploying ${APP_NAME} to Dev environment..."
-                sh '''
-                    oc project cboc
-                    oc set image deployment/bms-flask-app bms-flask-app=image-registry.openshift-image-registry.svc:5000/cboc/bms-flask-app:prod
-                    oc rollout status deployment/bms-flask-app -n cboc
-                '''
-            }
-        }
-    }  
 
     post {
         always {
