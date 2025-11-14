@@ -105,7 +105,7 @@ spec:
                     }
                 }
             }
-
+        }
 
     post {
         always {
