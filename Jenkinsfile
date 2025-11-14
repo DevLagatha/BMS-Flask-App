@@ -75,6 +75,7 @@ spec:
                             echo "<testsuite></testsuite>" > ~/home/agatha/reports/test-results.xml
                         fi
                     '''
+                    
                 }
             }
         }
