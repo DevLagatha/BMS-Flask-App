@@ -1,39 +1,45 @@
-# tests/test_app.py
+import pytest
+from datetime import datetime
+from app import app, db, Room, User, Booking
 
-# def test_example():
-#   assert 2 + 2 == 4
-    
-# tests/test_app.py
-from app import db, app, Room
-
-def test_basic_math():
-    """Dummy test that always passes."""
-    assert 1 + 1 == 2
-
-
-def test_create_dummy_room():
-    """Test creating a dummy room in an in-memory DB."""
-    # Set up in-memory database
+@pytest.fixture
+def client():
     app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+    with app.test_client() as client:
+        with app.app_context():
+            db.create_all()
+            # Add a room and a user
+            db.session.add(Room(name="Room 1", capacity=10, location="1st Floor", amenities="Projector"))
+            db.session.add(User(name="Jane Doe", email="jane@example.com", department="HR"))
+            db.session.commit()
+        yield client
+        with app.app_context():
+            db.drop_all()
 
+def test_bookings_page(client):
+    """Check that /bookings page loads."""
+    response = client.get('/bookings')
+    assert response.status_code == 200
+
+def test_add_booking(client):
+    """Check that we can add a booking."""
     with app.app_context():
-        db.create_all()
+        room_id = Room.query.first().id
+        user_id = User.query.first().id
 
-        # Create a dummy room
-        room = Room(
-            name="Test Room",
-            capacity=20,
-            location="Test Floor",
-            amenities="Projector"
-        )
+    booking_data = {
+        'room_id': room_id,
+        'user_id': user_id,
+        'meeting_title': 'Team Sync',
+        'meeting_date': datetime.now().strftime('%Y-%m-%d'),
+        'start_time': '10:00',
+        'end_time': '11:00',
+        'attendees': '5',
+        'notes': 'Weekly meeting'
+    }
 
-        db.session.add(room)
-        db.session.commit()
-
-        # Fetch it again
-        saved_room = Room.query.first()
-
-        assert saved_room is not None
-        assert saved_room.name == "Test Room"
-        assert saved_room.capacity == 20
+    response = client.post('/bookings/add', data=booking_data, follow_redirects=True)
+    assert response.status_code == 200
+    assert b'Booking created successfully!' in response.data
