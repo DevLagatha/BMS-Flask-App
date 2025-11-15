@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+ifrom flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date
 import os
@@ -9,8 +9,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bms.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-
-# Models
 class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -170,8 +168,8 @@ if __name__ == '__main__':
         
         if User.query.count() == 0:
             sample_users = [
-                User(name='Jane', email='jane@company.com', department='IT'),
-                User(name='Mathew Shelby', email='mathew@company.com', department='HR'),
+                User(name='John Doe', email='jane@company.com', department='IT'),
+                User(name='Jane Smith', email='mathew@company.com', department='HR'),
                 User(name='Mango Johnson', email='mango@company.com', department='Finance')
             ]
             for user in sample_users:
@@ -180,4 +178,3 @@ if __name__ == '__main__':
         db.session.commit()
     
     app.run(debug=True)
-
