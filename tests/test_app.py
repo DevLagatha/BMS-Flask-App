@@ -9,19 +9,21 @@ from app import app, db, Booking, Room, User
 
 @pytest.fixture
 def client():
-    # Setup: configure test client and in-memory database
+    # this one configures test client and in-memory database
     app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     client = app.test_client()
 
     with app.app_context():
         db.create_all()
+
         # Create dummy Room and User for testing
         room = Room(name="Conference Room A",capacity=10,location="1st Floor",amenities="Projector, Whiteboard")
         capacity=10,
         location="1st Floor",
         amenities="Projector, Whiteboard"
         user = User(name="Jane", email="jane@example.com")
+
         db.session.add_all([room, user])
         db.session.commit()
 
@@ -33,9 +35,10 @@ def client():
 
 
 def test_get_bookings_page(client):
-    """Test that the /bookings page loads successfully."""
+    """Make sure that the /bookings page loads successfully."""
     response = client.get('/bookings')
     assert response.status_code == 200
+
     assert b'bookings' in response.data.lower()                                      # checks template content
 
 
