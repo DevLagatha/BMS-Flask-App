@@ -178,8 +178,8 @@ if __name__ == '__main__':
         db.session.commit()
     
     if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
+        with app.app_context():
+            db.create_all()
         
         # (sample data stays as-is)
         
