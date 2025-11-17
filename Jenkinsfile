@@ -22,10 +22,6 @@ spec:
     image: docker:24-cli     
     command: ['cat']
     tty: true
-  - name: docker-image
-    image:  quay.io/openshift/origin-cli:4.12
-    command: ['cat']
-    tty: true
 
     
 '''
