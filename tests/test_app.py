@@ -40,6 +40,7 @@ def test_add_booking(client):
         'notes': 'Weekly meeting'
     }
 
+
     response = client.post('/bookings/add', data=booking_data, follow_redirects=True)
     assert response.status_code == 200
     assert b'Booking created successfully!' in response.data
