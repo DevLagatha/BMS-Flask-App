@@ -61,14 +61,15 @@ spec:
                 container('python') {
                     echo "Running unit tests..."
                     sh '''
-                        mkdir -p reports
+                        mkdir -p $WORKSPACE/reports
                         if [ -f tests/test_app.py ]; then
-                            echo "Tests found — running pytest..."
+                            echo "Tests found now running pytest..."
                             export PYTHONPATH=$(pwd)
-                            pytest -v tests/test_app.py --maxfail=1 --disable-warnings --junitxml=reports/test-results.xml
+                            pytest -v tests/test_app.py --maxfail=1 --disable-warnings --junitxml=$WORKSPACE/reports/test-results.xml
+                            find $WORKSPACE -name "*.xml" -type f
                         else
                             echo "No tests found, skipping pytest..."
-                            echo "<testxyz></testxyz>" > /reports/test-results.xml
+                            echo "<dummy-test></dummy-test>" > $WORKSPACE/reports/reports/test-results.xml
                         fi
                     '''
 
@@ -94,8 +95,7 @@ spec:
                 container('oc') {
                     sh '''
                     oc project cboc
-                    oc set image deployment/bms-flask-app \
-                    bms-flask-app=image-registry.openshift-image-registry.svc:5000/cboc/bms-flask-app:prod
+                    oc set image deployment/bms-flask-app bms-flask-app=image-registry.openshift-image-registry.svc:5000/cboc/bms-flask-app:prod
                     oc rollout status deployment/bms-flask-app -n cboc
                    '''
                     }
@@ -108,7 +108,7 @@ spec:
             echo "Pipeline finished (whether success or fail)."
             container('python') {
                 echo "Archiving reports..."
-                junit 'reports/test-results.xml'
+                junit '$WORKSPACE/reports/test-results.xml'
             }
         }
         success {
