@@ -65,10 +65,10 @@ spec:
                         if [ -f tests/test_app.py ]; then
                             echo "Tests found — running pytest..."
                             export PYTHONPATH=$(pwd)
-                            pytest -v --maxfail=1 --disable-warnings --junitxml=reports/test-results.xml
+                            pytest -v tests/test_app.py --maxfail=1 --disable-warnings --junitxml=reports/test-results.xml
                         else
                             echo "No tests found, skipping pytest..."
-                            echo "<testsuite></testsuite>" > /reports/test-results.xml
+                            echo "<testxyz></testxyz>" > /reports/test-results.xml
                         fi
                     '''
 
