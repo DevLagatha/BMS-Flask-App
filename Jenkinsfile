@@ -61,15 +61,15 @@ spec:
                 container('python') {
                     echo "Running unit tests..."
                     sh '''
-                        mkdir -p $WORKSPACE/reports
+                        mkdir -p /reports
                         if [ -f tests/test_app.py ]; then
                             echo "Tests found now running pytest..."
                             export PYTHONPATH=$(pwd)
-                            pytest -v tests/test_app.py --maxfail=1 --disable-warnings --junitxml=$WORKSPACE/reports/test-results.xml
+                            pytest -v tests/test_app.py --maxfail=1 --disable-warnings --junitxml=/reports/test-results.xml
                             find $WORKSPACE -name "*.xml" -type f
                         else
                             echo "No tests found, skipping pytest..."
-                            echo "<dummy-test></dummy-test>" > $WORKSPACE/reports/reports/test-results.xml
+                            echo "<dummy-test></dummy-test>" > /reports/test-results.xml
                         fi
                     '''
 
@@ -108,14 +108,15 @@ spec:
             echo "Pipeline finished (whether success or fail)."
             container('python') {
                 echo "Archiving reports..."
-                junit '$WORKSPACE/reports/test-results.xml'
+                archiveArtifacts artifacts: 'reports/test-results.xml', allowEmptyArchive: true
+                junit '/reports/test-results.xml'
             }
         }
         success {
             echo "Build, Test, and Deployment successful!"
         }
         failure {
-            echo "Pipeline failed — check logs for details."
+            echo "Pipeline failed check logs."
         }
     }
 }
