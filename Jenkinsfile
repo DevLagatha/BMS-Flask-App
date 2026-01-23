@@ -1,25 +1,26 @@
 pipeline {
     agent {
         kubernetes {
-            label 'jnlp'
+            label 'flaskapp-agent'
             cloud 'Kubernetes'
             namespace 'cboc'
-            yaml '''
+            defaultContainer 'python'
+
+            yaml """
 apiVersion: v1
 kind: Pod
 spec:
+  serviceAccountName: controller-oa
   containers:
   - name: python
     image: python:3.9-slim
     command: ['cat']
     tty: true
   - name: oc
-    image: jenkins/inbound-agent:latest
+    image: quay.io/openshift/origin-cli:4.12
     command: ['cat']
     tty: true
-  
-    
-'''
+"""
         }
     }
 
@@ -28,23 +29,24 @@ spec:
     }
 
     stages {
+
         stage('Checkout') {
             steps {
-                echo "Checking out source code..."
-                git branch: 'main', url: 'https://github.com/DevLagatha/BMS-Flask-App.git'
+                echo 'Checking out source code...'
+                git branch: 'main',
+                    url: 'https://github.com/DevLagatha/BMS-Flask-App.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
                 container('python') {
-                    echo "Installing Python dependencies..."
                     sh '''
-                        pip install --upgrade pip
+                        python -m pip install --upgrade pip
                         if [ -f requirements.txt ]; then
                             pip install -r requirements.txt
                         else
-                            echo "No requirements.txt found, skipping..."
+                            echo "No requirements.txt found"
                         fi
                     '''
                 }
@@ -54,72 +56,68 @@ spec:
         stage('Test') {
             steps {
                 container('python') {
-                    echo "Running unit tests..."
                     sh '''
-                        mkdir -p /reports
+                        mkdir -p reports
                         if [ -f tests/test_app.py ]; then
-                            echo "Tests found now running pytest..."
                             export PYTHONPATH=$(pwd)
-                            pytest -v tests/test_app.py --maxfail=1 --disable-warnings --junitxml=/reports/test-results.xml
-                            find $WORKSPACE -name "*.xml" -type f
+                            pytest -v tests/test_app.py \
+                                   --maxfail=1 \
+                                   --disable-warnings \
+                                   --junitxml=reports/test-results.xml
                         else
-                            echo "No tests found, skipping pytest..."
-                            echo "<dummy-test></dummy-test>" > /reports/test-results.xml
+                            echo "<testsuite></testsuite>" > reports/test-results.xml
                         fi
                     '''
-
                 }
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Image') {
             steps {
                 container('oc') {
                     sh '''
-                    oc start-build bms-flask-app --wait --follow -n cboc
-                    oc tag cboc/bms-flask-app:latest cboc/bms-flask-app:prod -n cboc
+                        oc start-build bms-flask-app --wait --follow -n cboc
+                        oc tag cboc/bms-flask-app:latest cboc/bms-flask-app:prod -n cboc
                     '''
-                    }
-                    
                 }
-                 
             }
-        
+        }
+
         stage('Deploy') {
             steps {
                 container('oc') {
                     sh '''
-                    oc project cboc
-                    oc set image deployment/bms-flask-app bms-flask-app=image-registry.openshift-image-registry.svc:5000/cboc/bms-flask-app:prod
-                    oc rollout status deployment/bms-flask-app -n cboc
-                   '''
+                        oc set image deployment/bms-flask-app \
+                          bms-flask-app=image-registry.openshift-image-registry.svc:5000/cboc/bms-flask-app:prod \
+                          -n cboc
+                        oc rollout status deployment/bms-flask-app -n cboc
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline finished.'
+            script {
+                if (env.WORKSPACE) {
+                    container('python') {
+                        archiveArtifacts artifacts: 'reports/test-results.xml', allowEmptyArchive: true
+                        junit 'reports/test-results.xml'
                     }
+                } else {
+                    echo 'Skipping post actions: no workspace allocated'
                 }
             }
         }
 
-    post {
-        always {
-            echo "Pipeline finished (whether success or fail)."
-            script
-            { 
-                if (env.WORKSPACE) 
-                {
-                    container('python'){
-                    echo "Archiving reports..."
-                    archiveArtifacts artifacts: 'reports/test-results.xml', allowEmptyArchive: true
-                    junit '/reports/test-results.xml' 
-                    }
-                    else {
-                echo "Skipping post actions: no workspace allocated"
-                }
-        }
-        }
         success {
-            echo "Build, Test, and Deployment successful!"
+            echo 'Build, test, and deployment succeeded.'
         }
+
         failure {
-            echo "Pipeline failed check logs."
+            echo 'Pipeline failed. Check logs.'
         }
     }
 }
