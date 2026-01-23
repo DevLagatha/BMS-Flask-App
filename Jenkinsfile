@@ -1,8 +1,7 @@
 pipeline {
     agent {
         kubernetes {
-            inheritFrom 'flaskapp-agent'
-            defaultContainer 'jnlp'
+            label 'jnlp'
             cloud 'Kubernetes'
             namespace 'cboc'
             yaml '''
@@ -15,7 +14,7 @@ spec:
     command: ['cat']
     tty: true
   - name: oc
-    image: quay.io/openshift/origin-cli:4.12
+    image: jenkins/inbound-agent:latest
     command: ['cat']
     tty: true
   
@@ -102,11 +101,19 @@ spec:
     post {
         always {
             echo "Pipeline finished (whether success or fail)."
-            container('python') {
-                echo "Archiving reports..."
-                archiveArtifacts artifacts: 'reports/test-results.xml', allowEmptyArchive: true
-                junit '/reports/test-results.xml'
-            }
+            script
+            { 
+                if (env.WORKSPACE) 
+                {
+                    container('python'){
+                    echo "Archiving reports..."
+                    archiveArtifacts artifacts: 'reports/test-results.xml', allowEmptyArchive: true
+                    junit '/reports/test-results.xml' 
+                    }
+                    else {
+                echo "Skipping post actions: no workspace allocated"
+                }
+        }
         }
         success {
             echo "Build, Test, and Deployment successful!"
