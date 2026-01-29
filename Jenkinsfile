@@ -1,7 +1,7 @@
 pipeline {
     agent {
         kubernetes {
-            label 'flaskapp-agent-runtime'
+            label 'flaskapp-agent'
             inheritFrom 'flaskapp-agent'
             cloud 'Kubernetes'
             namespace 'cboc'
