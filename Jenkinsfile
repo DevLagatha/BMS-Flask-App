@@ -2,6 +2,7 @@ pipeline {
     agent {
         kubernetes {
             inheritFrom 'flaskapp-agent'
+            label 'flaskapp-agent'
             cloud 'Kubernetes'
             namespace 'cboc'
             defaultContainer 'python'
