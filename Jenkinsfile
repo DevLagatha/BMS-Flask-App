@@ -38,8 +38,13 @@ pipeline {
                 container('python') {
                     sh '''
                         mkdir -p reports
-                        pytest -v tests || echo "<testsuite/>" > reports/test-results.xml
-                    '''
+                        if [ -d "tests" ]; then
+                            pytest -v tests || echo "<testsuite/>" > reports/test-results.xml
+                        else
+                            echo "No tests directory found, skipping tests."
+                            echo "<testsuite/>" > reports/test-results.xml
+                        fi
+                       '''
                 }
             }
         }
@@ -69,6 +74,10 @@ pipeline {
     post {
         always {
             echo 'Pipeline finished.'
+            container('python') {
+            junit 'reports/test-results.xml'
+            archiveArtifacts artifacts: 'reports/*.xml',
+                             allowEmptyArchive: true
         }
     }
 }
